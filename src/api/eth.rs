@@ -1,15 +1,10 @@
 //! `Eth` namespace
 
-use crate::{
-    api::Namespace,
-    helpers::{self, CallFuture},
-    types::{
-        Address, Block, BlockHeader, BlockId, BlockNumber, Bytes, CallRequest, FeeHistory, Filter, Index, Log, Proof,
-        SyncState, Transaction, TransactionId, TransactionReceipt, TransactionRequest, Work, H256, H520, H64, U256,
-        U64,
-    },
-    Transport,
-};
+use crate::{api::Namespace, helpers::{self, CallFuture}, types::{
+    Address, Block, BlockHeader, BlockId, BlockNumber, Bytes, CallRequest, FeeHistory, Filter, Index, Log, Proof,
+    SyncState, Transaction, TransactionId, TransactionReceipt, TransactionRequest, Work, H256, H520, H64, U256,
+    U64,
+}, Transport, rpc};
 
 /// `Eth` namespace
 #[derive(Debug, Clone)]
@@ -47,6 +42,14 @@ impl<T: Transport> Eth<T> {
         let block = helpers::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
 
         CallFuture::new(self.transport.execute("eth_call", vec![req, block]))
+    }
+
+    /// Call a constant method of contract without changing the state of the blockchain.
+    pub fn call_with_override(&self, req: CallRequest, block: Option<BlockId>, state_override: rpc::Value) -> CallFuture<Bytes, T::Out> {
+        let req = helpers::serialize(&req);
+        let block = helpers::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
+
+        CallFuture::new(self.transport.execute("eth_call", vec![req, block, state_override]))
     }
 
     /// Get coinbase address
